@@ -1,33 +1,34 @@
 # %% [markdown]
 # # 3.1 New Embodiment Finetuning Tutorial (Python API)
-# 
+#
 # This provides a step-by-step guide on how to finetune GR00T-N1.5 with our python API, the G1 Block Stacking Dataset is used as an example.
-# 
+#
 # This is a more detailed version of the [3_0_new_embodiment_finetuning.md](3_0_new_embodiment_finetuning.md) tutorial, which explains in-depth the details of configuring the dataset, transforms, and finetuning.
-# 
+#
 
 # %% [markdown]
 # ---
-# 
+#
 # ## Step 1: Dataset
-# 
+#
 # Loading any dataset for finetuning can be done in 2 steps:
 # - 1.1: Defining the modality configs and transforms for the dataset
 # - 1.2: Loading the dataset using the `LeRobotSingleDataset` class
 
 # %% [markdown]
 # ### Step: 1.0 Download the dataset
-# 
-# - Download the dataset from: https://huggingface.co/datasets/unitreerobotics/G1_BlockStacking_Dataset
+#
+# - Download the dataset from: https://huggingface.co/datasets/nvidia/PhysicalAI-Robotics-GR00T-Teleop-G1
+# - optional (you need format the meta config): https://huggingface.co/datasets/unitreerobotics/G1_BlockStacking_Dataset
 # - copy over the `examples/unitree_g1_blocks__modality.json` to the dataset `<DATASET_PATH>/meta/modality.json`
 #   - This provides additional information about the state and action modalities to make it "GR00T-compatible"
 #   - `cp examples/unitree_g1_blocks__modality.json datasets/G1_BlockStacking_Dataset/meta/modality.json`
-# 
-# 
+#
+#
 # **Understanding the Modality Configs**
-# 
+#
 # This file provides detailed metadata about state and action modalities, enabling:
-# 
+#
 # - **Separate Data Storage and Interpretation:**
 #   - **State and Action:** Stored as concatenated float32 arrays. The `modality.json` file supplies the metadata necessary to interpret these arrays as distinct, fine-grained fields with additional training information.
 #   - **Video:** Stored as separate files, with the configuration file allowing them to be renamed to a standardized format.
@@ -35,9 +36,9 @@
 # - **Fine-Grained Splitting:** Divides the state and action arrays into more semantically meaningful fields.
 # - **Clear Mapping:** Explicit mapping of data dimensions.
 # - **Sophisticated Data Transformations:** Supports field-specific normalization and rotation transformations during training.
-# 
+#
 # #### Schema
-# 
+#
 # ```json
 # {
 #     "state": {
@@ -60,25 +61,29 @@
 #     }
 # }
 # ```
-# 
+#
 # Example is shown in `getting_started/examples/unitree_g1_blocks__modality.json`. This file is located in the `meta` folder of the lerobot dataset.
-# 
-# 
+#
+#
 # Generate the Stats (`meta/metadata.json`) by running the following command:
 # ```bash
 # python scripts/load_dataset.py --data_path /datasets/G1_BlockStacking_Dataset/ --embodiment_tag new_embodiment
 # ```
 
 # %%
+from pathlib import Path
+
 from gr00t.data.schema import EmbodimentTag
 
-# %%
-dataset_path = "./demo_data/g1"  # change this to your dataset path
+PROJECT_ROOT = Path(__file__).parent.parent
+dataset_path = (
+    PROJECT_ROOT / "datasets/PhysicalAI-Robotics-GR00T-Teleop-G1/g1-pick-apple"
+)  # change this to your dataset path
 embodiment_tag = EmbodimentTag.NEW_EMBODIMENT
 
 # %% [markdown]
 # ### Step: 1.1 Modality configs and transforms
-# 
+#
 # Modality configs let you select which specific data streams to use for each input type (video, state, action, language, etc.) during finetuning, giving you precise control over which parts of your dataset are utilized.
 
 # %%
@@ -87,7 +92,7 @@ from gr00t.data.dataset import ModalityConfig
 # select the modality keys you want to use for finetuning
 video_modality = ModalityConfig(
     delta_indices=[0],
-    modality_keys=["video.cam_right_high"],
+    modality_keys=["video.rs_view"],
 )
 
 state_modality = ModalityConfig(
@@ -125,28 +130,44 @@ to_apply_transforms = ComposedModalityTransform(
         # video transforms
         VideoToTensor(apply_to=video_modality.modality_keys, backend="torchvision"),
         VideoCrop(apply_to=video_modality.modality_keys, scale=0.95, backend="torchvision"),
-        VideoResize(apply_to=video_modality.modality_keys, height=224, width=224, interpolation="linear", backend="torchvision" ),
-        VideoColorJitter(apply_to=video_modality.modality_keys, brightness=0.3, contrast=0.4, saturation=0.5, hue=0.08, backend="torchvision"),
+        VideoResize(
+            apply_to=video_modality.modality_keys,
+            height=224,
+            width=224,
+            interpolation="linear",
+            backend="torchvision",
+        ),
+        VideoColorJitter(
+            apply_to=video_modality.modality_keys,
+            brightness=0.3,
+            contrast=0.4,
+            saturation=0.5,
+            hue=0.08,
+            backend="torchvision",
+        ),
         VideoToNumpy(apply_to=video_modality.modality_keys),
-
         # state transforms
         StateActionToTensor(apply_to=state_modality.modality_keys),
-        StateActionTransform(apply_to=state_modality.modality_keys, normalization_modes={
-            "state.left_arm": "min_max",
-            "state.right_arm": "min_max",
-            "state.left_hand": "min_max",
-            "state.right_hand": "min_max",
-        }),
-
+        StateActionTransform(
+            apply_to=state_modality.modality_keys,
+            normalization_modes={
+                "state.left_arm": "min_max",
+                "state.right_arm": "min_max",
+                "state.left_hand": "min_max",
+                "state.right_hand": "min_max",
+            },
+        ),
         # action transforms
         StateActionToTensor(apply_to=action_modality.modality_keys),
-        StateActionTransform(apply_to=action_modality.modality_keys, normalization_modes={
-            "action.right_arm": "min_max",
-            "action.left_arm": "min_max",
-            "action.right_hand": "min_max",
-            "action.left_hand": "min_max",
-        }),
-
+        StateActionTransform(
+            apply_to=action_modality.modality_keys,
+            normalization_modes={
+                "action.right_arm": "min_max",
+                "action.left_arm": "min_max",
+                "action.right_hand": "min_max",
+                "action.left_hand": "min_max",
+            },
+        ),
         # ConcatTransform
         ConcatTransform(
             video_concat_order=video_modality.modality_keys,
@@ -166,7 +187,7 @@ to_apply_transforms = ComposedModalityTransform(
 
 # %% [markdown]
 # ### Step 1.2 Load the dataset
-# 
+#
 # First we will visualize the dataset and then load it using the `LeRobotSingleDataset` class. (without transforms)
 
 # %%
@@ -188,10 +209,10 @@ print(train_dataset[0].keys())
 
 images = []
 for i in range(5):
-    image = train_dataset[i]["video.cam_right_high"][0]
+    image = train_dataset[i]["video.rs_view"][0]
     # image is in HWC format, convert it to CHW format
     image = image.transpose(2, 0, 1)
-    images.append(image)   
+    images.append(image)
 
 fig, axs = plt.subplots(1, 5, figsize=(20, 5))
 for i, image in enumerate(images):
@@ -214,11 +235,11 @@ train_dataset = LeRobotSingleDataset(
 # **Extra Notes**:
 #  - We use a cached dataloader to accelerate training speed. The cached dataloader loads all data into memory, which significantly improves training performance. However, if your dataset is large or you're experiencing out-of-memory (OOM) errors, you can switch to the standard lerobot dataloader (`gr00t.data.dataset.LeRobotSingleDataset`). It uses the same API as the cached dataloader, so you can switch back and forth without any changes to your code.
 #  - we use `torchcodec` as the video backend, the video encoding is in av instead of standard h264
-# 
+#
 
 # %% [markdown]
 # ### Step 2: Load the model
-# 
+#
 # The training process is done in 3 steps:
 # - 2.1: Load the base model from HuggingFace or a local path
 # - 2.2: Prepare training args
@@ -226,7 +247,7 @@ train_dataset = LeRobotSingleDataset(
 
 # %% [markdown]
 # #### Step 2.1 Load the base model
-# 
+#
 # We'll use the `from_pretrained_for_tuning` method to load the model. This method allows us to specify which parts of the model to tune.
 
 # %%
@@ -241,10 +262,10 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 from gr00t.model.gr00t_n1 import GR00T_N1_5
 
 BASE_MODEL_PATH = "nvidia/GR00T-N1.5-3B"
-TUNE_LLM = False            # Whether to tune the LLM
-TUNE_VISUAL = False          # Whether to tune the visual encoder
-TUNE_PROJECTOR = True       # Whether to tune the projector
-TUNE_DIFFUSION_MODEL = True # Whether to tune the diffusion model
+TUNE_LLM = False  # Whether to tune the LLM
+TUNE_VISUAL = False  # Whether to tune the visual encoder
+TUNE_PROJECTOR = True  # Whether to tune the projector
+TUNE_DIFFUSION_MODEL = True  # Whether to tune the diffusion model
 
 model = GR00T_N1_5.from_pretrained(
     pretrained_model_name_or_path=BASE_MODEL_PATH,
@@ -261,15 +282,15 @@ model.to(device)
 
 # %% [markdown]
 # #### Step 2.2 Prepare training args
-# 
+#
 # We use huggingface `TrainingArguments` to configure the training process. Here are the main parameters:
 
 # %%
 from transformers import TrainingArguments
 
-output_dir = "output/model/path"    # CHANGE THIS ACCORDING TO YOUR LOCAL PATH
-per_device_train_batch_size = 8     # CHANGE THIS ACCORDING TO YOUR GPU MEMORY
-max_steps = 20                      # CHANGE THIS ACCORDING TO YOUR NEEDS
+output_dir = "output/model/path"  # CHANGE THIS ACCORDING TO YOUR LOCAL PATH
+per_device_train_batch_size = 8  # CHANGE THIS ACCORDING TO YOUR GPU MEMORY
+max_steps = 20  # CHANGE THIS ACCORDING TO YOUR NEEDS
 report_to = "wandb"
 dataloader_num_workers = 8
 
@@ -325,15 +346,13 @@ experiment.train()
 
 # %% [markdown]
 # We can see the 1k offline validation results vs 10k offline validation results:
-# 
+#
 # **Finetuning Results on Unitree G1 Block Stacking Dataset:**
-# 
+#
 # | 1k Steps | 10k Steps |
 # | --- | --- |
 # | ![1k](../media/g1_ft_1k.png) | ![10k](../media/g1_ft_10k.png) |
 # | MSE: 0.0181 | MSE: 0.0022 |
 
 # %% [markdown]
-# 
-
-
+#
