@@ -77,6 +77,7 @@ dataset = LeRobotSingleDataset(
     modality_configs=modality_config,
     video_backend="decord",
     video_backend_kwargs=None,
+    # transforms=policy.modality_transform,
     transforms=None,  # We'll handle transforms separately through the policy
     embodiment_tag=EMBODIMENT_TAG,
 )
@@ -195,3 +196,5 @@ for key, value in predicted_action.items():
 # 
 
 
+
+# %%
