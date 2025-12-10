@@ -52,6 +52,7 @@ dependencies = [
     "onnx==1.18.0",
     "tyro",
     "pytest",
+    "ipykernel"
 ]
 
 [project.optional-dependencies]

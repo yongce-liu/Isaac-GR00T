@@ -120,6 +120,7 @@ Create a new conda environment and install the dependencies. We recommend Python
 > In such cases, make sure to install a compatible version of `flash-attn` manually (e.g., `flash-attn==2.8.2` was confirmed working with CUDA 11.8).
 
 ```sh
+sudo apt install ffmpeg -y
 conda create -n gr00t python=3.10
 conda activate gr00t
 pip install --upgrade setuptools
