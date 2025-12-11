@@ -19,9 +19,9 @@ python scripts/inference_service.py --server \
 ```
 
  - Model path is the path to the checkpoint to use for the policy, user should provide the path to the checkpoint after finetuning
- - Denoising steps is the number of denoising steps to use for the policy, we noticed that having a denoising step of 4 is on par with 16
  - Embodiment tag is the tag of the embodiment to use for the policy, user should use new_embodiment when finetuning on a new robot
  - Data config is the data config to use for the policy. Users should use `so100`. If you want to use a different robot, implement your own `ModalityConfig` and `TransformConfig`
+ - Denoising steps is the number of denoising steps to use for the policy, we noticed that having a denoising step of 4 is on par with 16
 
 ### 2. Client node
 
