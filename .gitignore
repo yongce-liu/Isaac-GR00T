@@ -1,5 +1,6 @@
 datasets
 ckpt*
+uv*
 
 # C extensions
 *.so
