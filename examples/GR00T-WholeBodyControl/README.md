@@ -68,7 +68,8 @@ os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
 import gymnasium as gym, robocasa, robosuite
 import gr00t_wbc.control.envs.robocasa.sync_env
 print("Imports OK:", robosuite.__version__)
-env = gym.make("gr00tlocomanip_g1_sim/LMBottlePnP_G1_gear_wbc", enable_render=True)
+# env = gym.make("gr00tlocomanip_g1_sim/LMBottlePnP_G1_gear_wbc", enable_render=True)
+env = gym.make("gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc", enable_render=True)
 print("Env OK:", type(env))
 PY
 ```
@@ -81,7 +82,7 @@ You can use either a local finetuned checkpoint path or the remote finetuned che
 
 **Option 1: Local finetuned checkpoint**
 ```bash
-uv run python eval/run_gr00t_server.py \
+uv run python examples/eval_server.py \
     --model-path /tmp/g1_finetune/checkpoint-10000/ \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper \
@@ -91,7 +92,7 @@ uv run python eval/run_gr00t_server.py \
 
 **Option 2: Remote finetuned checkpoint (directly runnable)**
 ```bash
-uv run python examples/run_server.py \
+uv run python examples/eval_server.py \
     --model-path nvidia/GR00T-N1.6-G1-PnPAppleToPlate \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper \
@@ -102,13 +103,14 @@ uv run python examples/run_server.py \
 **Terminal 2 - Client:**
 ```bash
 examples/GR00T-WholeBodyControl/.venv/bin/python examples/eval_sim.py \
-    --n_episodes 10 \
+    --n_episodes=10 \
     --max_episode_steps=1440 \
-    --env_name gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc \
-    --multistep.n_action_steps 20 \
-    --n_envs 1 \
-    --policy_client_port 8888 \
-    --policy_client_host 192.168.123.55
+    --env_name="gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc" \
+    --multistep.n_action_steps=20 \
+    --multistep.terminate_on_success \
+    --n_envs=2 \
+    --policy_client_port=8888 \
+    --policy_client_host=192.168.123.55
 ```
 
 # Full task list

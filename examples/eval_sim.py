@@ -67,19 +67,6 @@ class MultiStepConfig:
 
 
 @dataclass
-class WrapperConfig:
-    """Container for various environment wrapper configurations.
-
-    Attributes:
-        video: Configuration for video recording
-        multistep: Configuration for multi-step processing
-    """
-
-    video: VideoConfig
-    multistep: MultiStepConfig
-
-
-@dataclass
 class ClientConfig:
     """A client config.
     Attributes:
@@ -103,12 +90,30 @@ class ClientConfig:
     policy_client_host: str = ""
     policy_client_port: int | None = None
     env_name: str = ""
-    n_envs: int = 8
+    n_envs: int = 1
 
     def __post_init__(self):
+        # validate policy configuration
+        assert (self.model_path and not (self.policy_client_host or self.policy_client_port)) or (
+            not self.model_path and self.policy_client_host and self.policy_client_port is not None
+        ), (
+            "Invalid policy configuration: You must provide EITHER model_path OR (policy_client_host & policy_client_port), not both.\n"
+            "If all 3 arguments are provided, explicitly choose one:\n"
+            '  - To use policy client: set --policy_client_host and --policy_client_port, and set --model_path ""\n'
+            '  - To use model path: set --model_path, and set --policy_client_host "" (and leave --policy_client_port unset)'
+        )
+
         self.video.max_episode_steps = self.max_episode_steps
         self.multistep.max_episode_steps = self.max_episode_steps
         # self.multistep.terminate_on_success = True
+        if self.video.video_dir is None and self.model_path:
+            video_dir = f"/tmp/sim_eval_videos_{self.model_path.split('/')[-3]}_ac{self.multistep.n_action_steps}_{uuid.uuid4()}"
+        elif self.video.video_dir is None:
+            video_dir = f"/tmp/sim_eval_videos_{self.env_name}_ac{self.multistep.n_action_steps}_{uuid.uuid4()}"
+        elif self.env_name.startswith("sim_behavior_r1_pro"):
+            # BEHAVIOR sim will crash if decord is imported in video_utils.py
+            video_dir = None
+        self.video.video_dir = video_dir
 
 
 ##########################################
@@ -229,7 +234,7 @@ def create_eval_env(
     env_name: str,
     env_idx: int,
     total_n_envs: int,
-    wrapper_config: WrapperConfig,
+    config: ClientConfig,
 ) -> gym.Env:
     """Create a single evaluation environment with wrappers.
 
@@ -242,36 +247,36 @@ def create_eval_env(
     """
 
     env = get_gym_env(env_name, env_idx, total_n_envs)
-    if wrapper_config.video.video_dir is not None:
+    if config.video.video_dir is not None:
         from gr00t.eval.sim.wrapper.video_recording_wrapper import (
             VideoRecorder,
             VideoRecordingWrapper,
         )
 
         video_recorder = VideoRecorder.create_h264(
-            fps=wrapper_config.video.fps,
-            codec=wrapper_config.video.codec,
-            input_pix_fmt=wrapper_config.video.input_pix_fmt,
-            crf=wrapper_config.video.crf,
-            thread_type=wrapper_config.video.thread_type,
-            thread_count=wrapper_config.video.thread_count,
+            fps=config.video.fps,
+            codec=config.video.codec,
+            input_pix_fmt=config.video.input_pix_fmt,
+            crf=config.video.crf,
+            thread_type=config.video.thread_type,
+            thread_count=config.video.thread_count,
         )
         env = VideoRecordingWrapper(
             env,
             video_recorder,
-            video_dir=Path(wrapper_config.video.video_dir),
-            steps_per_render=wrapper_config.video.steps_per_render,
-            max_episode_steps=wrapper_config.video.max_episode_steps,
-            overlay_text=wrapper_config.video.overlay_text,
+            video_dir=Path(config.video.video_dir),
+            steps_per_render=config.video.steps_per_render,
+            max_episode_steps=config.video.max_episode_steps,
+            overlay_text=config.video.overlay_text,
         )
 
     env = MultiStepWrapper(
         env,
-        video_delta_indices=wrapper_config.multistep.video_delta_indices,
-        state_delta_indices=wrapper_config.multistep.state_delta_indices,
-        n_action_steps=wrapper_config.multistep.n_action_steps,
-        max_episode_steps=wrapper_config.multistep.max_episode_steps,
-        terminate_on_success=wrapper_config.multistep.terminate_on_success,
+        video_delta_indices=config.multistep.video_delta_indices,
+        state_delta_indices=config.multistep.state_delta_indices,
+        n_action_steps=config.multistep.n_action_steps,
+        max_episode_steps=config.multistep.max_episode_steps,
+        terminate_on_success=config.multistep.terminate_on_success,
     )
     return env
 
@@ -279,9 +284,9 @@ def create_eval_env(
 def run_rollout_gymnasium_policy(
     env_name: str,
     policy: BasePolicy,
-    wrapper_config: WrapperConfig,
     n_episodes: int,
     n_envs: int,
+    config: ClientConfig,
 ) -> Any:
     """Run policy rollouts in parallel environments.
 
@@ -305,7 +310,7 @@ def run_rollout_gymnasium_policy(
             env_idx=idx,
             env_name=env_name,
             total_n_envs=n_envs,
-            wrapper_config=wrapper_config,
+            config=config,
         )
         for idx in range(n_envs)
     ]
@@ -462,7 +467,7 @@ def run_gr00t_sim_policy(
     policy_client_host: str,
     policy_client_port: int,
     n_envs: int,
-    wrapper_config: WrapperConfig,
+    config: ClientConfig,
 ):
     embodiment_tag = get_embodiment_tag_from_env_name(env_name)
 
@@ -473,37 +478,16 @@ def run_gr00t_sim_policy(
     results = run_rollout_gymnasium_policy(
         env_name=env_name,
         policy=policy,
-        wrapper_config=wrapper_config,
         n_episodes=n_episodes,
         n_envs=n_envs,
+        config=config,
+
     )
     return results
 
 
 if __name__ == "__main__":
     config = tyro.cli(ClientConfig)
-
-    # validate policy configuration
-    assert (config.model_path and not (config.policy_client_host or config.policy_client_port)) or (
-        not config.model_path
-        and config.policy_client_host
-        and config.policy_client_port is not None
-    ), (
-        "Invalid policy configuration: You must provide EITHER model_path OR (policy_client_host & policy_client_port), not both.\n"
-        "If all 3 arguments are provided, explicitly choose one:\n"
-        '  - To use policy client: set --policy_client_host and --policy_client_port, and set --model_path ""\n'
-        '  - To use model path: set --model_path, and set --policy_client_host "" (and leave --policy_client_port unset)'
-    )
-
-    if config.video.video_dir is None and config.model_path:
-        video_dir = f"/tmp/sim_eval_videos_{config.model_path.split('/')[-3]}_ac{config.multistep.n_action_steps}_{uuid.uuid4()}"
-    elif config.video.video_dir is None:
-        video_dir = (
-            f"/tmp/sim_eval_videos_{config.env_name}_ac{config.multistep.n_action_steps}_{uuid.uuid4()}"
-        )
-    elif config.env_name.startswith("sim_behavior_r1_pro"):
-        # BEHAVIOR sim will crash if decord is imported in video_utils.py
-        video_dir = None
 
     results = run_gr00t_sim_policy(
         env_name=config.env_name,
@@ -512,10 +496,7 @@ if __name__ == "__main__":
         policy_client_host=config.policy_client_host,
         policy_client_port=config.policy_client_port,
         n_envs=config.n_envs,
-        wrapper_config=WrapperConfig(
-            video=config.video,
-            multistep=config.multistep,
-        ),
+        config=config,
     )
 
     print("=" * 100)
