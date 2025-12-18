@@ -91,7 +91,7 @@ uv run python eval/run_gr00t_server.py \
 
 **Option 2: Remote finetuned checkpoint (directly runnable)**
 ```bash
-uv run python eval/run_gr00t_server.py \
+uv run python examples/run_server.py \
     --model-path nvidia/GR00T-N1.6-G1-PnPAppleToPlate \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper \
@@ -101,7 +101,8 @@ uv run python eval/run_gr00t_server.py \
 
 **Terminal 2 - Client:**
 ```bash
-examples/GR00T-WholeBodyControl/.venv/bin/python eval/rollout_policy.py \
+cd examples/GR00T-WholeBodyControl
+uv run python eval_sim.py \
     --n_episodes 10 \
     --max_episode_steps=1440 \
     --env_name gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc \
