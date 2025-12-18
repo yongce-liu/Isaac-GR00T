@@ -84,7 +84,9 @@ You can use either a local finetuned checkpoint path or the remote finetuned che
 uv run python eval/run_gr00t_server.py \
     --model-path /tmp/g1_finetune/checkpoint-10000/ \
     --embodiment-tag UNITREE_G1 \
-    --use-sim-policy-wrapper
+    --use-sim-policy-wrapper \
+    --host x.x.x.x \
+    --port 8888
 ```
 
 **Option 2: Remote finetuned checkpoint (directly runnable)**
@@ -92,7 +94,9 @@ uv run python eval/run_gr00t_server.py \
 uv run python eval/run_gr00t_server.py \
     --model-path nvidia/GR00T-N1.6-G1-PnPAppleToPlate \
     --embodiment-tag UNITREE_G1 \
-    --use-sim-policy-wrapper
+    --use-sim-policy-wrapper \
+    --port 8888 \
+    --host 192.168.123.55
 ```
 
 **Terminal 2 - Client:**
@@ -102,9 +106,9 @@ examples/GR00T-WholeBodyControl/.venv/bin/python eval/rollout_policy.py \
     --max_episode_steps=1440 \
     --env_name gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc \
     --n_action_steps 20 \
-    --n_envs 5 \
-    --policy_client_host x.x.x.x \
-    --policy_client_port 5555
+    --n_envs 1 \
+    --policy_client_port 8888 \
+    --policy_client_host 192.168.123.55
 ```
 
 # Full task list
