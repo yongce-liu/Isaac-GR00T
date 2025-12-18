@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "exp_gr00t_wbc"
+version = "0.1.0"
+requires-python = "==3.10.*"
+dependencies = [
+    "gr00t_wbc",
+    "robosuite",
+    "robosuite_models",
+    "robocasa",
+    "mujoco==3.2.6",
+    "transformers==4.51.3"
+]
+
+[tool.uv.sources]
+gr00t_wbc = { path = "third_party/GR00T-WholeBodyControl", editable = true }
+robosuite = { path = "third_party/robosuite", editable = true }
+robosuite_models = { path = "third_party/robosuite_models", editable = true }
+robocasa = { path = "third_party/GR00T-WholeBodyControl/gr00t_wbc/dexmg/gr00trobocasa", editable = true }
+
+[tool.uv]
+override-dependencies = [
+    "mujoco==3.2.6",
+    "transformers==4.51.3",
+]

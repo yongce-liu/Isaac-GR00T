@@ -10,6 +10,13 @@
 [submodule "external_dependencies/robocasa"]
 	path = external_dependencies/robocasa
 	url = https://github.com/squarefk/robocasa
-[submodule "external_dependencies/GR00T-WholeBodyControl"]
-    path = external_dependencies/GR00T-WholeBodyControl
-    url = https://github.com/NVlabs/GR00T-WholeBodyControl.git
+[submodule "examples/GR00T-WholeBodyControl/third_party/GR00T-WholeBodyControl"]
+	path = examples/GR00T-WholeBodyControl/third_party/GR00T-WholeBodyControl
+	url = https://github.com/NVlabs/GR00T-WholeBodyControl.git
+[submodule "examples/GR00T-WholeBodyControl/third_party/robosuite"]
+	path = examples/GR00T-WholeBodyControl/third_party/robosuite
+	url = https://github.com/xieleo5/robosuite.git
+	branch = leo/support_g1_locomanip
+[submodule "examples/GR00T-WholeBodyControl/third_party/robosuite_models"]
+	path = examples/GR00T-WholeBodyControl/third_party/robosuite_models
+	url = https://github.com/ARISE-Initiative/robosuite_models.git
