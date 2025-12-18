@@ -481,7 +481,6 @@ def run_gr00t_sim_policy(
         n_episodes=n_episodes,
         n_envs=n_envs,
         config=config,
-
     )
     return results
 

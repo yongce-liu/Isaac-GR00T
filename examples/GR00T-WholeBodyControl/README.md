@@ -82,7 +82,7 @@ You can use either a local finetuned checkpoint path or the remote finetuned che
 
 **Option 1: Local finetuned checkpoint**
 ```bash
-uv run python examples/eval_server.py \
+uv run python scripts/eval_server.py \
     --model-path /tmp/g1_finetune/checkpoint-10000/ \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper \
@@ -92,7 +92,7 @@ uv run python examples/eval_server.py \
 
 **Option 2: Remote finetuned checkpoint (directly runnable)**
 ```bash
-uv run python examples/eval_server.py \
+uv run python scripts/eval_server.py \
     --model-path nvidia/GR00T-N1.6-G1-PnPAppleToPlate \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper \
@@ -102,7 +102,7 @@ uv run python examples/eval_server.py \
 
 **Terminal 2 - Client:**
 ```bash
-examples/GR00T-WholeBodyControl/.venv/bin/python examples/eval_sim.py \
+examples/GR00T-WholeBodyControl/.venv/bin/python scripts/eval_sim.py \
     --n_episodes=10 \
     --max_episode_steps=1440 \
     --env_name="gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc" \
