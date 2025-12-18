@@ -110,6 +110,8 @@ If your data was collected using a different whole-body controller, we strongly 
 exp_path=examples/GR00T-WholeBodyControl/third_party/GR00T-WholeBodyControl
 git submodule update --init $exp_path
 git -C "$exp_path" lfs pull
+cd examples/GR00T-WholeBodyControl
+uv sync
 UV_ENV="examples/GR00T-WholeBodyControl" uv pip install --editable . --no-deps
 ```
 ## Validation
