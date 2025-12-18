@@ -101,12 +101,11 @@ uv run python examples/run_server.py \
 
 **Terminal 2 - Client:**
 ```bash
-cd examples/GR00T-WholeBodyControl
-uv run python eval_sim.py \
+examples/GR00T-WholeBodyControl/.venv/bin/python examples/eval_sim.py \
     --n_episodes 10 \
     --max_episode_steps=1440 \
     --env_name gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc \
-    --n_action_steps 20 \
+    --multistep.n_action_steps 20 \
     --n_envs 1 \
     --policy_client_port 8888 \
     --policy_client_host 192.168.123.55
