@@ -48,7 +48,29 @@ First, setup the evaluation simulation environment. This only needs to run once 
 ```bash
 apt-get update
 apt-get install libegl1-mesa-dev libglu1-mesa
-bash gr00t/eval/sim/GR00T-WholeBodyControl/setup_GR00T_WholeBodyControl.sh
+# bash gr00t/eval/sim/GR00T-WholeBodyControl/setup_GR00T_WholeBodyControl.sh
+```
+```bash
+dep_path=examples/GR00T-WholeBodyControl/third_party/GR00T-WholeBodyControl && \
+git submodule update --init $dep_path && \
+git -C "$dep_path" lfs pull && \
+cd examples/GR00T-WholeBodyControl && \
+uv sync && \
+uv pip install --editable ../../ --no-deps && \
+cd ../../
+```
+```bash
+## Validation
+examples/GR00T-WholeBodyControl/.venv/bin/python - <<'PY'
+import os
+os.environ.setdefault("MUJOCO_GL", "egl")
+os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
+import gymnasium as gym, robocasa, robosuite
+import gr00t_wbc.control.envs.robocasa.sync_env
+print("Imports OK:", robosuite.__version__)
+env = gym.make("gr00tlocomanip_g1_sim/LMBottlePnP_G1_gear_wbc", enable_render=True)
+print("Env OK:", type(env))
+PY
 ```
 
 Then, run client server evaluation under the project root directory in separate terminals:
@@ -59,7 +81,7 @@ You can use either a local finetuned checkpoint path or the remote finetuned che
 
 **Option 1: Local finetuned checkpoint**
 ```bash
-uv run python gr00t/eval/run_gr00t_server.py \
+uv run python eval/run_gr00t_server.py \
     --model-path /tmp/g1_finetune/checkpoint-10000/ \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper
@@ -67,7 +89,7 @@ uv run python gr00t/eval/run_gr00t_server.py \
 
 **Option 2: Remote finetuned checkpoint (directly runnable)**
 ```bash
-uv run python gr00t/eval/run_gr00t_server.py \
+uv run python eval/run_gr00t_server.py \
     --model-path nvidia/GR00T-N1.6-G1-PnPAppleToPlate \
     --embodiment-tag UNITREE_G1 \
     --use-sim-policy-wrapper
@@ -75,13 +97,13 @@ uv run python gr00t/eval/run_gr00t_server.py \
 
 **Terminal 2 - Client:**
 ```bash
-examples/GR00T-WholeBodyControl/.venv/bin/python gr00t/eval/rollout_policy.py \
+examples/GR00T-WholeBodyControl/.venv/bin/python eval/rollout_policy.py \
     --n_episodes 10 \
     --max_episode_steps=1440 \
     --env_name gr00tlocomanip_g1_sim/LMPnPAppleToPlateDC_G1_gear_wbc \
     --n_action_steps 20 \
     --n_envs 5 \
-    --policy_client_host 0.0.0.0 \
+    --policy_client_host x.x.x.x \
     --policy_client_port 5555
 ```
 
@@ -104,26 +126,4 @@ If you collected your data using the [GR00T-WholeBodyControl](https://github.com
 If your data was collected using a different whole-body controller, we strongly recommend creating and finetuning with a `NEW_EMBODIMENT` tag. This allows you to define a custom embodiment tag tailored to your specific controller setup. Detailed instructions can be found in the [finetune new embodiment guide](../../getting_started/finetune_new_embodiment.md).
 
 
-# Environment Setup
-## Setup
-```bash
-exp_path=examples/GR00T-WholeBodyControl/third_party/GR00T-WholeBodyControl
-git submodule update --init $exp_path
-git -C "$exp_path" lfs pull
-cd examples/GR00T-WholeBodyControl
-uv sync
-UV_ENV="examples/GR00T-WholeBodyControl" uv pip install --editable . --no-deps
-```
-## Validation
-```bash
-examples/GR00T-WholeBodyControl/.venv/bin/python - <<'PY'
-import os
-os.environ.setdefault("MUJOCO_GL", "egl")
-os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
-import gymnasium as gym, robocasa, robosuite
-import gr00t_wbc.control.envs.robocasa.sync_env
-print("Imports OK:", robosuite.__version__)
-env = gym.make("gr00tlocomanip_g1_sim/LMBottlePnP_G1_gear_wbc", enable_render=True)
-print("Env OK:", type(env))
-PY
-```
+
