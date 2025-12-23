@@ -75,6 +75,7 @@ from pathlib import Path
 
 from gr00t.data.schema import EmbodimentTag
 
+
 PROJECT_ROOT = Path(__file__).parent.parent
 dataset_path = (
     PROJECT_ROOT / "datasets/PhysicalAI-Robotics-GR00T-Teleop-G1/g1-pick-apple"
@@ -88,6 +89,7 @@ embodiment_tag = EmbodimentTag.NEW_EMBODIMENT
 
 # %%
 from gr00t.data.dataset import ModalityConfig
+
 
 # select the modality keys you want to use for finetuning
 video_modality = ModalityConfig(
@@ -118,11 +120,18 @@ modality_configs = {
 }
 
 # %%
-from gr00t.data.transform import VideoColorJitter, VideoCrop, VideoResize, VideoToNumpy, VideoToTensor
+from gr00t.data.transform import (
+    VideoColorJitter,
+    VideoCrop,
+    VideoResize,
+    VideoToNumpy,
+    VideoToTensor,
+)
 from gr00t.data.transform.base import ComposedModalityTransform
 from gr00t.data.transform.concat import ConcatTransform
 from gr00t.data.transform.state_action import StateActionToTensor, StateActionTransform
 from gr00t.model.transforms import GR00TTransform
+
 
 # select the transforms you want to apply to the data
 to_apply_transforms = ComposedModalityTransform(
@@ -193,6 +202,7 @@ to_apply_transforms = ComposedModalityTransform(
 # %%
 from gr00t.data.dataset import LeRobotSingleDataset
 
+
 train_dataset = LeRobotSingleDataset(
     dataset_path=dataset_path,
     modality_configs=modality_configs,
@@ -204,6 +214,7 @@ train_dataset = LeRobotSingleDataset(
 # use matplotlib to visualize the images
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 print(train_dataset[0].keys())
 
@@ -255,11 +266,13 @@ import os
 
 import torch
 
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # %%
 from gr00t.model.gr00t_n1 import GR00T_N1_5
+
 
 BASE_MODEL_PATH = "nvidia/GR00T-N1.5-3B"
 TUNE_LLM = False  # Whether to tune the LLM
@@ -287,6 +300,7 @@ model.to(device)
 
 # %%
 from transformers import TrainingArguments
+
 
 output_dir = "output/model/path"  # CHANGE THIS ACCORDING TO YOUR LOCAL PATH
 per_device_train_batch_size = 8  # CHANGE THIS ACCORDING TO YOUR GPU MEMORY
@@ -335,6 +349,7 @@ training_args = TrainingArguments(
 
 # %%
 from gr00t.experiment.runner import TrainRunner
+
 
 experiment = TrainRunner(
     train_dataset=train_dataset,

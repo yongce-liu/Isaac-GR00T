@@ -1,6 +1,6 @@
 # %% [markdown]
 # # GR00T Inference
-# 
+#
 # This tutorial shows how to use the GR00T inference model to predict the actions from the observations, given a test dataset.
 
 # %%
@@ -27,9 +27,9 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # %% [markdown]
 # ## Loading Pretrained Policy
-# 
+#
 # Policy Model is loaded just like any other huggingface model.
-# 
+#
 # There are 2 new concepts here in the GR00T model:
 #  - modality config: This defines the keys in the dictionary used by the model. (e.g. `action`, `state`, `annotation`, `video`)
 #  - modality_transform: A sequence of transform which are used during dataloading
@@ -84,7 +84,11 @@ import numpy as np
 
 episode_data = dataset[0]
 step_data = extract_step_data(
-    episode_data, step_index=0, modality_configs=modality_config, embodiment_tag=EmbodimentTag(EMBODIMENT_TAG), allow_padding=False
+    episode_data,
+    step_index=0,
+    modality_configs=modality_config,
+    embodiment_tag=EmbodimentTag(EMBODIMENT_TAG),
+    allow_padding=False,
 )
 
 # print(step_data)
@@ -92,7 +96,9 @@ step_data = extract_step_data(
 print("\n\n====================================")
 print("Images:")
 for img_key in step_data.images:
-    print(" " * 4, img_key, f"{len(step_data.images[img_key])} x {step_data.images[img_key][0].shape}")
+    print(
+        " " * 4, img_key, f"{len(step_data.images[img_key])} x {step_data.images[img_key][0].shape}"
+    )
 
 print("\nStates:")
 for state_key in step_data.states:
@@ -127,7 +133,11 @@ print(len(episode_data))
 
 for step_count in range(max_steps):
     data_point = extract_step_data(
-        episode_data, step_index=step_count, modality_configs=modality_config, embodiment_tag=EmbodimentTag(EMBODIMENT_TAG), allow_padding=False
+        episode_data,
+        step_index=step_count,
+        modality_configs=modality_config,
+        embodiment_tag=EmbodimentTag(EMBODIMENT_TAG),
+        allow_padding=False,
     )
     state_joints = data_point.states[joint_name][0]
     gt_action_joints = data_point.actions[joint_name][0]
@@ -147,7 +157,7 @@ gt_action_joints_across_time = np.array(gt_action_joints_across_time)
 
 # Plot the joint angles across time
 num_joints = state_joints_across_time.shape[1]
-fig, axes = plt.subplots(nrows=num_joints, ncols=1, figsize=(8, 2*num_joints))
+fig, axes = plt.subplots(nrows=num_joints, ncols=1, figsize=(8, 2 * num_joints))
 
 for i, ax in enumerate(axes):
     ax.plot(state_joints_across_time[:, i], label="state joints")
@@ -171,12 +181,16 @@ for i, ax in enumerate(axes):
 
 # %%
 observation = {
-    "video": {k: np.stack(step_data.images[k])[None] for k in step_data.images},  # stach images and add batch dimension
+    "video": {
+        k: np.stack(step_data.images[k])[None] for k in step_data.images
+    },  # stach images and add batch dimension
     "state": {k: step_data.states[k][None] for k in step_data.states},  # add batch dimension
     "action": {k: step_data.actions[k][None] for k in step_data.actions},  # add batch dimension
     "language": {
-        modality_config["language"].modality_keys[0]: [[step_data.text]],  # add time and batch dimension
-    }
+        modality_config["language"].modality_keys[0]: [
+            [step_data.text]
+        ],  # add time and batch dimension
+    },
 }
 predicted_action, info = policy.get_action(observation)
 for key, value in predicted_action.items():
@@ -184,5 +198,3 @@ for key, value in predicted_action.items():
 
 # %% [markdown]
 # For more details on the policy (e.g. expected input and output), please refer to the [policy documentation](policy.md).
-
-

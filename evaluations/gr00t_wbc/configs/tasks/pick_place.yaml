@@ -1,0 +1,35 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - /default.yaml@_global_
+
+task: Gr00tPickAndPlace-v0
+
+params:
+  object_name: apple
+  target_name: plate
+  success_threshold: 0.05
+
+env_config:
+  simulator_config:
+    scene:
+      objects:
+        apple:
+          path: ${project_root:}/assets/objects/apple_0/model.xml
+          # initial_position: [0.4, 0.0, 0.684446]
+          initial_position: [0.4, 0.0, 0.73]
+          # initial_orientation: [1, 0.0, 0.0, 0] # [w, x, y, z]
+        plate:
+          path: ${project_root:}/assets/objects/plate_1/model.xml
+          initial_position: [0.4, 1.2, 0.7]
+        object_table:
+          path: ${project_root:}/assets/objects/lab_table/model.xml
+          initial_position: [0.5, 0.0, 0.0]
+          initial_orientation: [0.707, 0.0, 0.0, 0.707]
+        target_table:
+          path: ${project_root:}/assets/objects/lab_table/model.xml
+          initial_position: [0.5, 1.2, 0.0]
+          initial_orientation: [0.707, 0.0, 0.0, 0.707]
+        g1:
+          initial_position: [-0.5, 0.0, 0.78]

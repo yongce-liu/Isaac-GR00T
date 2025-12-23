@@ -1,16 +1,16 @@
 # %% [markdown]
 # # GR00T Inference
-# 
+#
 # This tutorial shows how to use the GR00T inference model to predict the actions from the observations, given a test dataset.
 
 # %%
 import os
 
-import torch
-
 import gr00t
 from gr00t.data.dataset import LeRobotSingleDataset
 from gr00t.model.policy import Gr00tPolicy
+import torch
+
 
 # %%
 # change the following paths
@@ -25,15 +25,16 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # %% [markdown]
 # ## Loading Pretrained Policy
-# 
+#
 # Policy Model is loaded just like any other huggingface model.
-# 
+#
 # There are 2 new concepts here in the GR00T model:
 #  - modality config: This defines the keys in the dictionary used by the model. (e.g. `action`, `state`, `annotation`, `video`)
 #  - modality_transform: A sequence of transform which are used during dataloading
 
 # %%
 from gr00t.experiment.data_config import DATA_CONFIG_MAP
+
 
 data_config = DATA_CONFIG_MAP["fourier_gr1_arms_only"]
 modality_config = data_config.modality_config()
@@ -58,6 +59,7 @@ print(policy.model)
 
 # %%
 import numpy as np
+
 
 modality_config = policy.modality_config
 
@@ -88,6 +90,7 @@ dataset = LeRobotSingleDataset(
 # %%
 import numpy as np
 
+
 step_data = dataset[0]
 
 print(step_data)
@@ -106,6 +109,7 @@ for key, value in step_data.items():
 # %%
 import matplotlib.pyplot as plt
 
+
 traj_id = 0
 max_steps = 150
 
@@ -119,8 +123,7 @@ for step_count in range(max_steps):
     data_point = dataset.get_step_data(traj_id, step_count)
     state_joints = data_point["state.right_arm"][0]
     gt_action_joints = data_point["action.right_arm"][0]
-    
-   
+
     state_joints_across_time.append(state_joints)
     gt_action_joints_across_time.append(gt_action_joints)
 
@@ -135,7 +138,7 @@ gt_action_joints_across_time = np.array(gt_action_joints_across_time)
 
 
 # Plot the joint angles across time
-fig, axes = plt.subplots(nrows=7, ncols=1, figsize=(8, 2*7))
+fig, axes = plt.subplots(nrows=7, ncols=1, figsize=(8, 2 * 7))
 
 for i, ax in enumerate(axes):
     ax.plot(state_joints_across_time[:, i], label="state joints")
@@ -153,7 +156,7 @@ fig, axes = plt.subplots(nrows=1, ncols=sample_images, figsize=(16, 4))
 for i, ax in enumerate(axes):
     ax.imshow(images[i])
     ax.axis("off")
-    
+
 
 # %% [markdown]
 # Now we can run the policy from the pretrained checkpoint.
@@ -165,10 +168,10 @@ for key, value in predicted_action.items():
 
 # %% [markdown]
 # ### Understanding the Action Output
-# 
+#
 # Each joint in the action output has a shape of (16, N) where N is the degree of freedom for the joint.
 # - 16 represents the action horizon (predictions for timesteps t, t+1, t+2, ..., t+15)
-# 
+#
 # For each arm (left and right):
 # - 7 arm joints:
 #   - Shoulder pitch
@@ -178,7 +181,7 @@ for key, value in predicted_action.items():
 #   - Wrist yaw
 #   - Wrist roll
 #   - Wrist pitch
-# 
+#
 # For each hand (left and right):
 # - 6 finger joints:
 #   - Little finger
@@ -187,14 +190,13 @@ for key, value in predicted_action.items():
 #   - Index finger
 #   - Thumb rotation
 #   - Thumb bending
-# 
+#
 # For the waist
 # - 3 joints:
 #   - torso waist yaw
 #   - torso waist pitch
 #   - torso waist roll
-# 
-
+#
 
 
 # %%

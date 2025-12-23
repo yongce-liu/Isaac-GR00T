@@ -1,3 +1,5 @@
+*assets*
+*.onnx
 debug*
 datasets
 ckpt*
