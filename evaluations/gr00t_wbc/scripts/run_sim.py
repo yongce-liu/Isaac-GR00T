@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-import gr00t
 import gymnasium as gym
 import hydra
+from hydra.core.hydra_config import HydraConfig
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 import robot_sim.adapters.gr00t  # noqa: F401 - triggers task registration
@@ -12,8 +12,8 @@ from robot_sim.configs import MapTaskConfig
 from robot_sim.utils.helper import setup_logger
 
 
-PROJECT_ROOT = Path(gr00t.__file__).parents[1].resolve() / "evaluations" / "gr00t_wbc"
-OmegaConf.register_new_resolver("project_root", lambda: str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).parents[1].resolve()
+OmegaConf.register_new_resolver("root", lambda: str(PROJECT_ROOT))
 
 
 def check_observation_space(task: gym.Env, obs: gym.spaces.Dict) -> None:
@@ -27,13 +27,18 @@ def check_observation_space(task: gym.Env, obs: gym.spaces.Dict) -> None:
             # input("Press Enter to continue...")
 
 
-def run(cfg: DictConfig) -> None:
+@hydra.main(
+    version_base=None,
+    config_path=str(PROJECT_ROOT),
+    config_name="configs/tasks/pick_place.yaml",
+)
+def main(cfg: DictConfig) -> None:
     """Run Gr00t simulation.
 
     Args:
         cfg: Hydra configuration containing simulator_config, observation_mapping, action_mapping
     """
-    setup_logger()
+    setup_logger(f"{HydraConfig.get().runtime.output_dir}/{HydraConfig.get().job.name}.loguru.log")
     logger.info("Starting Gr00t simulation...")
     cfg = hydra.utils.instantiate(cfg, _recursive_=True)
 
@@ -78,24 +83,6 @@ def run(cfg: DictConfig) -> None:
 
     logger.info("Gr00t simulation completed successfully!")
     task.close()
-
-
-@hydra.main(
-    version_base=None,
-    config_path=str(PROJECT_ROOT / "configs"),
-    config_name="tasks/pick_place.yaml",
-)
-def main(cfg: DictConfig) -> None:
-    """Main function to run Gr00t simulation with Hydra configuration.
-
-    Args:
-        cfg: Hydra configuration
-    """
-    try:
-        run(cfg)
-    except Exception as e:
-        logger.exception(f"An error occurred in main: {e}")
-        raise e
 
 
 if __name__ == "__main__":
