@@ -37,18 +37,13 @@ dependencies = [
     "wandb==0.23.0",
     "pyzmq==27.0.1",
     "deepspeed==0.17.6",
-    "ipykernel"
+    "ipykernel",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "ruff",
-    "ipython",
-]
-tensorrt = [
-    "onnx>=1.20.0",
-    "tensorrt>=10.14.1.48.post1",
-]
+dev = ["ruff", "ipython"]
+tensorrt = ["onnx>=1.20.0", "tensorrt>=10.14.1.48.post1"]
+gr00t_wbc = ["robot_sim @ git+https://github.com/yongce-liu/robot_sim.git@main"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -94,4 +89,10 @@ force-sort-within-sections = true
 force-wrap-aliases = false
 split-on-trailing-comma = false
 lines-after-imports = 2
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
