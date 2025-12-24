@@ -1,31 +1,54 @@
+import os
 from pathlib import Path
 
-from gr00t.eval.utils.config import ClientConfig
+from gr00t.eval.utils.config import ClientConfig, MultiStepConfig, VideoConfig
 from gr00t.eval.utils.helper import run_gr00t_sim_policy
 import gymnasium as gym
 import hydra
 import numpy as np
 from omegaconf import OmegaConf
-from robot_sim.configs import MapTaskConfig
+
+# Also triggers task registration with gym.registry
+from robot_sim.adapters.gr00t import Gr00tTaskConfig  # noqa: F401
 from robot_sim.utils.helper import setup_logger
-import tyro
 
 
 def get_env_fn(path: str) -> gym.Env:
-    PROJECT_ROOT = Path(__file__).parents[1]
-    OmegaConf.register_new_resolver("project_root", lambda: str(PROJECT_ROOT))
-    cfg = OmegaConf.load(path)
-    setup_logger(log_file="output_path")
-    cfg = hydra.utils.instantiate(cfg, _recursive_=True)
-    task_cfg = MapTaskConfig.from_dict(OmegaConf.to_container(cfg, resolve=True))
-    task_cfg.print()
-    task = gym.make(task_cfg.task, env_config=task_cfg.env_config, **task_cfg.params)
-
+    PROJECT_ROOT = Path(__file__).parents[1].resolve()
+    os.chdir(PROJECT_ROOT)
+    with hydra.initialize(config_path="../configs", version_base=None):
+        cfg = hydra.compose(config_name=path, overrides=[])
+    setup_logger(log_file=f"logs/{Path(__file__).stem}.loguru.log")
+    cfg = OmegaConf.to_container(cfg, resolve=True)
+    task_cfg = Gr00tTaskConfig.from_dict(cfg)
+    task = gym.make(task_cfg.task, config=task_cfg.environment, **task_cfg.params)
     return task
 
 
 if __name__ == "__main__":
-    eval_config = tyro.cli(ClientConfig)
+    # eval_config = tyro.cli(ClientConfig)
+    eval_config = ClientConfig(
+        task_config="configs/tasks/pick_place.yaml",
+        n_episodes=2,
+        max_episode_steps=1440,
+        n_envs=1,
+        policy_client_port=8888,
+        policy_client_host="192.168.123.55",
+        video=VideoConfig(),
+        multistep=MultiStepConfig(n_action_steps=20, terminate_on_success=False),
+    )
+    # eval_config.video = VideoConfig()
+    # eval_config.multistep = MultiStepConfig()
+
+    eval_config.n_episodes = 1
+    eval_config.max_episode_steps = 2000
+    eval_config.task_config = "tasks/pick_place.yaml"
+    eval_config.multistep.n_action_steps = 20
+    eval_config.multistep.terminate_on_success
+    eval_config.n_envs = 1
+    eval_config.policy_client_port = 8888
+    eval_config.policy_client_host = "192.168.123.55"
+
     env = get_env_fn(eval_config.task_config)
 
     results = run_gr00t_sim_policy(

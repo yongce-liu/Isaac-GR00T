@@ -164,10 +164,10 @@ def run_rollout_gymnasium_policy(
     Returns:
         Collection results from running the episodes
     """
-
+    task_name = config.task_config.split("/")[-1]
     start_time = time.time()
     n_episodes = max(n_episodes, n_envs)
-    print(f"Running collecting {n_episodes} episodes for {env.spec.id} with {n_envs} vec envs")
+    print(f"Running collecting {n_episodes} episodes for {task_name} with {n_envs} vec envs")
 
     env_fns = [
         partial(
@@ -196,6 +196,8 @@ def run_rollout_gymnasium_policy(
     episode_successes = []
     episode_infos = defaultdict(list)
 
+    buffer = []
+
     # Initial reset
     observations, _ = env.reset()
     policy.reset()
@@ -205,6 +207,9 @@ def run_rollout_gymnasium_policy(
     while completed_episodes < n_episodes:
         actions, _ = policy.get_action(observations)
         next_obs, rewards, terminations, truncations, env_infos = env.step(actions)
+        buffer.append(
+            (observations, actions, rewards, next_obs, terminations, truncations, env_infos)
+        )
         # NOTE (FY): Currently we don't properly handle policy reset. For now, our policy are stateless,
         # but in the future if we need policy to be stateful, we need to detect env reset and call policy.reset()
         i += 1
@@ -273,6 +278,9 @@ def run_rollout_gymnasium_policy(
 
     env.reset()
     env.close()
+    import pickle as pkl
+    with open("debug_rollout_buffer.pkl", "wb") as f:
+        pkl.dump(buffer, f)
     print(f"Collecting {n_episodes} episodes took {time.time() - start_time} seconds")
 
     assert len(episode_successes) >= n_episodes, (
@@ -292,7 +300,7 @@ def run_rollout_gymnasium_policy(
         episode_successes = [episode_successes[i] for i in valid_idxs]
         episode_infos = {k: [v[i] for i in valid_idxs] for k, v in episode_infos.items()}
 
-    return env.spec.id, episode_successes, episode_infos
+    return task_name, episode_successes, episode_infos
 
 
 def create_gr00t_sim_policy(
