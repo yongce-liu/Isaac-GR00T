@@ -16,7 +16,9 @@ from robot_sim.utils.helper import setup_logger
 def get_env_fn(path: str) -> gym.Env:
     PROJECT_ROOT = Path(__file__).parents[1].resolve()
     os.chdir(PROJECT_ROOT)
-    with hydra.initialize(config_path="../configs", version_base=None):
+    with hydra.initialize(
+        config_path="../../../../robot_sim/examples/gr00t/configs", version_base=None
+    ):
         cfg = hydra.compose(config_name=path, overrides=[])
     setup_logger(log_file=f"logs/{Path(__file__).stem}.loguru.log")
     cfg = OmegaConf.to_container(cfg, resolve=True)
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     # eval_config.multistep = MultiStepConfig()
 
     eval_config.n_episodes = 1
-    eval_config.max_episode_steps = 2000
+    eval_config.max_episode_steps = 500
     eval_config.task_config = "tasks/pick_place.yaml"
     eval_config.multistep.n_action_steps = 20
     eval_config.multistep.terminate_on_success
