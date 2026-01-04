@@ -1,0 +1,12 @@
+_target_: gr00t.eval.utils.helper.EvalConfig
+embodiment_tag: unitree_g1
+max_episode_steps: 1440
+n_episodes: 1
+policy_client_host: 192.168.123.55
+policy_client_port: 8888
+n_envs: 1
+video:
+  _target_: gr00t.eval.utils.helper.VideoConfig
+multistep:
+  _target_: gr00t.eval.utils.helper.MultiStepConfig
+  n_action_steps: 20

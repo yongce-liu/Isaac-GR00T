@@ -37,12 +37,13 @@ dependencies = [
     "wandb==0.23.0",
     "pyzmq==27.0.1",
     "deepspeed==0.17.6",
+    "tqdm>=4.67.1",
 ]
 
 [project.optional-dependencies]
 dev = ["ruff", "ipython"]
 tensorrt = ["onnx>=1.20.0", "tensorrt>=10.14.1.48.post1"]
-g1_wbc = ["robot_sim[all]"]
+g1_wbc = ["robot_sim[gr00t, teleop]"]
 
 [tool.setuptools.packages.find]
 where = ["."]

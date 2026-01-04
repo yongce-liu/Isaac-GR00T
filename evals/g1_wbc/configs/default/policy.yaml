@@ -1,0 +1,51 @@
+upper_policy:
+  actuator_indices:
+    [
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+    ]
+lower_policy:
+  actuator_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  hand_indices: [22, 23, 24, 25, 26, 27, 28, 36, 37, 38, 39, 40, 41, 42]
+  stand_mode_threshold: 0.05
+  model_path:
+    stand: examples/gr00t/configs/policy/g1/GR00T-WholeBodyControl-Balance.onnx
+    walk: examples/gr00t/configs/policy/g1/GR00T-WholeBodyControl-Walk.onnx
+  observation_params:
+    gravity_vec: [0, 0, -1.0]
+    single_obs_dim: 86
+    obs_history_len: 6
+    action_scale: 0.25
+    command_scale: [2.0, 2.0, 0.25]
+    nav_command: [0.0, 0.0, 0.0]
+    height_command: 0.74
+    rpy_command: [0.0, 0.0, 0.0]
+    ang_vel_scale: 0.25
+    joint_pos_scale: 1.0
+    joint_vel_scale: 0.05
