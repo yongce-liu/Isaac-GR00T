@@ -15,7 +15,6 @@ hydra:
 # Default configurations to compose the full configuration
 defaults:
   - _self_
-  - /default/eval.yaml@eval
   - /default/simulator.yaml@simulator
   - /default/modality.yaml@maps
   - /default/policy.yaml@maps.policy

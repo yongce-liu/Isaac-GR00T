@@ -31,12 +31,14 @@ def main(cfg: DictConfig) -> None:
     Args:
         cfg: Hydra configuration containing simulator_config, observation_mapping, action_mapping
     """
+    cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
     setup_logger(f"{HydraConfig.get().runtime.output_dir}/{HydraConfig.get().job.name}.loguru.log")
     logger.info("Starting Gr00t simulation...")
-    eval_cfg = hydra.utils.instantiate(cfg.eval, _recursive_=True)
-    eval_cfg.video.video_dir = f"{HydraConfig.get().runtime.output_dir}/{HydraConfig.get().job.name}/videos"
-    cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
-    cfg.pop("eval")
+    eval_cfg_path = PROJECT_DIR / f"configs/{cfg.pop('eval', 'default/eval.yaml')}"
+    eval_cfg = hydra.utils.instantiate(OmegaConf.load(eval_cfg_path), _recursive_=True)
+    eval_cfg.video.video_dir = (
+        f"{HydraConfig.get().runtime.output_dir}/{HydraConfig.get().job.name}/videos"
+    )
     task_cfg: Gr00tTaskConfig = Gr00tTaskConfig.from_dict(cfg)
 
     # Initialize Gr00tEnv
