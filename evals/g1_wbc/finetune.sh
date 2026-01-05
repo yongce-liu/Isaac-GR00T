@@ -1,5 +1,5 @@
 uv run --env-file .env python gr00t/experiment/launch_finetune.py \
-    --base_model_path  nvidia/GR00T-N1.6-3B \
+    --base_model_path  finetune/ckpts/nvidia-GR00T-N1.6-3B \
     --dataset_path finetune/datasets/unitree_g1.LMPnPAppleToPlateDC \
     --embodiment_tag UNITREE_G1 \
     --num_gpus 1 \
