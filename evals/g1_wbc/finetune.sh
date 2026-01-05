@@ -1,0 +1,15 @@
+uv run --env-file .env python gr00t/experiment/launch_finetune.py \
+    --base_model_path  nvidia/GR00T-N1.6-3B \
+    --dataset_path finetune/datasets/unitree_g1.LMPnPAppleToPlateDC \
+    --embodiment_tag UNITREE_G1 \
+    --num_gpus 1 \
+    --output_dir finetune/outputs/unitree_g1 \
+    --save_total_limit 5 \
+    --max_steps 10000 \
+    --warmup_ratio 0.05 \
+    --weight_decay 1e-5 \
+    --learning_rate 1e-4 \
+    --use_wandb \
+    --global_batch_size 1 \
+    --dataloader_num_workers 1 \
+    --color_jitter_params brightness 0.3 contrast 0.4 saturation 0.5 hue 0.08
